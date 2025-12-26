@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,169 +8,155 @@ datasource db {
 }
 
 model User {
-  id                    Int          @id @default(autoincrement())
-  email                 String       @unique
-  name                  String
-  password              String
-  role                  Role         @default(USER)
-  phone                 String?
-  avatar                String?
-  vehicleType           VehicleType? // CAR, TAXI, VAN
-  vehicleRegistration   String?      // Vehicle registration number
-  resetPasswordToken    String?
-  resetPasswordExpires  DateTime?
-  stripeCustomerId      String?      @unique
-  fcmToken              String?      // Firebase Cloud Messaging Token
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
-  status                UserStatus   @default(ACTIVE)
-
-  subscriptions    Subscription[]
-  paymentMethods   PaymentMethod[]
-  supportTickets   SupportTicket[]
-  verifications    Verification[]
-  oneTimePurchases OneTimePurchase[]
+  id                   Int               @id @default(autoincrement())
+  email                String            @unique
+  name                 String
+  password             String
+  role                 Role              @default(USER)
+  phone                String?
+  avatar               String?
+  stripeCustomerId     String?           @unique
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  vehicleRegistration  String?
+  vehicleType          VehicleType?
+  resetPasswordExpires DateTime?
+  resetPasswordToken   String?
+  status               UserStatus        @default(ACTIVE)
+  fcmToken             String?
+  oneTimePurchases     OneTimePurchase[]
+  paymentMethods       PaymentMethod[]
+  subscriptions        Subscription[]
+  supportTickets       SupportTicket[]
+  verifications        Verification[]
 
   @@map("users")
 }
 
 model ExtraService {
-  id          Int      @id @default(autoincrement())
+  id          Int               @id @default(autoincrement())
   name        String
   description String?
   price       Float
-  type        WashType // IN_AND_OUT or OUTSIDE_ONLY
-  active      Boolean  @default(true)
-  deleted     Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  type        WashType
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deleted     Boolean           @default(false)
   purchases   OneTimePurchase[]
 
   @@map("extra_services")
 }
 
 model OneTimePurchase {
-  id             Int             @id @default(autoincrement())
-  userId         Int
-  serviceId      Int
-  status         PurchaseStatus  @default(PENDING)
-  stripePaymentIntentId String?  @unique
-  used           Boolean         @default(false)
-  usedAt         DateTime?
-  expiresAt      DateTime?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  user           User            @relation(fields: [userId], references: [id])
-  service        ExtraService    @relation(fields: [serviceId], references: [id])
-  qrCode         QRCode?
-  verification   Verification?
-  verificationCodes VerificationCode[]
+  id                    Int                @id @default(autoincrement())
+  userId                Int
+  serviceId             Int
+  status                PurchaseStatus     @default(PENDING)
+  stripePaymentIntentId String?            @unique
+  used                  Boolean            @default(false)
+  usedAt                DateTime?
+  expiresAt             DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  service               ExtraService       @relation(fields: [serviceId], references: [id])
+  user                  User               @relation(fields: [userId], references: [id])
+  qrCode                QRCode?
+  verificationCodes     VerificationCode[]
+  verification          Verification?
 
   @@map("one_time_purchases")
 }
 
-enum PurchaseStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
 model Plan {
-  id                  Int          @id @default(autoincrement())
-  name                String
-  description         String?
-  price               Float
-  duration            Int          // in days
-  vehicleType         VehicleType? // CAR, TAXI, VAN (optional for migration)
-  tier                PlanTier?    // BASE, STANDARD, PREMIUM (optional for migration)
-  inAndOutQuota       Int?         // Number of In & Out washes allowed
-  outsideOnlyQuota    Int?         // Number of Outside Only washes allowed (mainly for BASE plans)
-  inAndOutPayout      Float?       // Payout amount per In & Out wash (e.g., 10.00 for £10)
-  outsideOnlyPayout   Float?       // Payout amount per Outside Only wash (e.g., 8.00 for £8)
-  active              Boolean      @default(true)
-  deleted             Boolean      @default(false)
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
-
-  subscriptions Subscription[]
+  id                Int            @id @default(autoincrement())
+  name              String
+  description       String?
+  price             Float
+  duration          Int
+  active            Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  inAndOutPayout    Float?
+  inAndOutQuota     Int?
+  outsideOnlyPayout Float?
+  outsideOnlyQuota  Int?
+  tier              PlanTier?
+  vehicleType       VehicleType?
+  deleted           Boolean        @default(false)
+  subscriptions     Subscription[]
 
   @@map("plans")
 }
 
 model Subscription {
-  id                   Int                @id @default(autoincrement())
-  userId               Int
-  planId               Int
-  status               SubscriptionStatus @default(PENDING)
-  startDate            DateTime
-  endDate              DateTime
-  inAndOutWashesUsed   Int                @default(0) // Track In & Out washes separately
-  outsideOnlyWashesUsed Int               @default(0) // Track Outside Only washes separately
-  stripeSubscriptionId String?            @unique
-  cancelAtPeriodEnd    Boolean            @default(false)
-  canceledAt           DateTime?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan              Plan               @relation(fields: [planId], references: [id])
-  qrCodes           QRCode[]
-  verifications     Verification[]
-  invoices          Invoice[]
-  verificationCodes VerificationCode[]
+  id                    Int                @id @default(autoincrement())
+  userId                Int
+  planId                Int
+  status                SubscriptionStatus @default(PENDING)
+  startDate             DateTime
+  endDate               DateTime
+  stripeSubscriptionId  String?            @unique
+  cancelAtPeriodEnd     Boolean            @default(false)
+  canceledAt            DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  inAndOutWashesUsed    Int                @default(0)
+  outsideOnlyWashesUsed Int                @default(0)
+  invoices              Invoice[]
+  qrCodes               QRCode[]
+  plan                  Plan               @relation(fields: [planId], references: [id])
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verificationCodes     VerificationCode[]
+  verifications         Verification[]
 
   @@map("subscriptions")
 }
 
 model Partner {
-  id                        Int           @id @default(autoincrement())
-  name                      String        // Business Name
-  tradingName               String?       // Trading Name (optional)
-  companyRegistrationNumber String?       // CRN (optional)
-  contactPersonName         String?       // Contact person name
-  email                     String        @unique
-  password                  String        // Hashed password
-  phone                     String?       
-  openingHours              String?       // JSON string or text format
-  servicesOffered           String?       // JSON array or comma-separated
-  businessPhoto             String?       // URL to uploaded photo/logo
-  resetPasswordToken        String?
+  id                        Int            @id @default(autoincrement())
+  name                      String
+  email                     String         @unique
+  password                  String
+  phone                     String?
+  status                    PartnerStatus  @default(PENDING)
+  stripeAccountId           String?        @unique
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+  businessPhoto             String?
+  companyRegistrationNumber String?
+  contactPersonName         String?
+  openingHours              String?
+  servicesOffered           String?
+  tradingName               String?
   resetPasswordExpires      DateTime?
-  status                    PartnerStatus @default(PENDING)
-  stripeAccountId           String?       @unique // Stripe Connect account ID for payouts
-  fcmToken                  String?       // Firebase Cloud Messaging Token
-  createdAt                 DateTime      @default(now())
-  updatedAt                 DateTime      @updatedAt
-
-  locations     Location[]
-  verifications Verification[]
-  payouts       Payout[]
+  resetPasswordToken        String?
+  fcmToken                  String?
+  locations                 Location[]
+  payouts                   Payout[]
+  verifications             Verification[]
 
   @@map("partners")
 }
 
 model Location {
-  id           Int      @id @default(autoincrement())
-  partnerId    Int
-  name         String   // Location/Branch name (e.g., "Main Office", "Downtown Branch")
-  postcode     String?  // UK Postcode - Nullable for legacy data
-  addressLine1 String?  // e.g., "123 High Street" - Nullable for legacy data
-  addressLine2 String?  // e.g., "Suite 4" - OPTIONAL
-  city         String?  // e.g., "London" - Nullable for legacy data
-  county       String?  // e.g., "Greater London" - Auto-filled from postcode
-  country      String   @default("United Kingdom")
-  latitude     Float    // Precise coordinates from postcode validation
-  longitude    Float    // Precise coordinates from postcode validation
-  phone        String?  // Location-specific phone
-  hours        String?  // Location-specific opening hours
-  isPrimary    Boolean  @default(false) // Mark primary business location
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
+  id            Int            @id @default(autoincrement())
+  partnerId     Int
+  name          String
+  latitude      Float
+  longitude     Float
+  phone         String?
+  hours         String?
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  addressLine1  String?
+  addressLine2  String?
+  city          String?
+  country       String         @default("United Kingdom")
+  county        String?
+  postcode      String?
+  isPrimary     Boolean        @default(false)
   partner       Partner        @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   verifications Verification[]
 
@@ -184,64 +167,59 @@ model Location {
 }
 
 model Verification {
-  id             Int       @id @default(autoincrement())
-  userId         Int
-  partnerId      Int
-  subscriptionId Int?
-  locationId     Int?
-  washType       WashType? // IN_AND_OUT or OUTSIDE_ONLY (optional for migration)
-  payoutAmount   Float?    // The payout amount for this specific wash (optional for migration)
-  verifiedAt     DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-
-  user         User          @relation(fields: [userId], references: [id])
-  partner      Partner       @relation(fields: [partnerId], references: [id])
-  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
-  location     Location?     @relation(fields: [locationId], references: [id])
-  payout       Payout?       // One-to-one relation with Payout
-  
-  // Relations for One-Time Purchases
-  oneTimePurchaseId Int?     @unique
+  id                Int              @id @default(autoincrement())
+  userId            Int
+  partnerId         Int
+  subscriptionId    Int?
+  locationId        Int?
+  verifiedAt        DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  payoutAmount      Float?
+  washType          WashType?
+  oneTimePurchaseId Int?             @unique
+  payout            Payout?
+  location          Location?        @relation(fields: [locationId], references: [id])
   oneTimePurchase   OneTimePurchase? @relation(fields: [oneTimePurchaseId], references: [id])
+  partner           Partner          @relation(fields: [partnerId], references: [id])
+  subscription      Subscription?    @relation(fields: [subscriptionId], references: [id])
+  user              User             @relation(fields: [userId], references: [id])
 
   @@map("verifications")
 }
 
 model QRCode {
-  id             Int       @id @default(autoincrement())
-  subscriptionId Int?
-  oneTimePurchaseId Int?   @unique
-  code           String    @unique
-  washType       WashType? // IN_AND_OUT or OUTSIDE_ONLY (optional for migration)
-  active         Boolean   @default(true)
-  expiresAt      DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  subscription    Subscription?    @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  oneTimePurchase OneTimePurchase? @relation(fields: [oneTimePurchaseId], references: [id])
+  id                Int              @id @default(autoincrement())
+  subscriptionId    Int?
+  code              String           @unique
+  active            Boolean          @default(true)
+  expiresAt         DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  washType          WashType?
+  oneTimePurchaseId Int?             @unique
+  oneTimePurchase   OneTimePurchase? @relation(fields: [oneTimePurchaseId], references: [id])
+  subscription      Subscription?    @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@map("qr_codes")
 }
 
 model VerificationCode {
-  id             Int                @id @default(autoincrement())
-  subscriptionId Int?
+  id                Int                @id @default(autoincrement())
+  subscriptionId    Int?
+  code              String             @unique
+  qrCodeData        String
+  status            VerificationStatus @default(PENDING)
+  usedBy            Int?
+  usedAt            DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  expiresAt         DateTime
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  washType          WashType?
   oneTimePurchaseId Int?
-  code           String             @unique
-  qrCodeData     String             // Base64 or data URL for QR code
-  washType       WashType?          // IN_AND_OUT or OUTSIDE_ONLY (optional for migration)
-  status         VerificationStatus @default(PENDING)
-  usedBy         Int?               // Partner ID who used it
-  usedAt         DateTime?
-  startedAt      DateTime?
-  completedAt    DateTime?
-  expiresAt      DateTime
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-
-  subscription    Subscription?    @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  oneTimePurchase OneTimePurchase? @relation(fields: [oneTimePurchaseId], references: [id])
+  oneTimePurchase   OneTimePurchase?   @relation(fields: [oneTimePurchaseId], references: [id])
+  subscription      Subscription?      @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([code])
   @@index([subscriptionId])
@@ -249,45 +227,35 @@ model VerificationCode {
   @@map("verification_codes")
 }
 
-enum VerificationStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  EXPIRED
-  CANCELLED
-}
-
 model PaymentMethod {
-  id                     Int      @id @default(autoincrement())
-  userId                 Int
-  stripePaymentMethodId  String   @unique
-  type                   String
-  last4                  String?
-  brand                  String?
-  expiryMonth            Int?
-  expiryYear             Int?
-  isDefault              Boolean  @default(false)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    Int      @id @default(autoincrement())
+  userId                Int
+  stripePaymentMethodId String   @unique
+  type                  String
+  last4                 String?
+  brand                 String?
+  expiryMonth           Int?
+  expiryYear            Int?
+  isDefault             Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("payment_methods")
 }
 
 model Invoice {
-  id                Int           @id @default(autoincrement())
-  subscriptionId    Int
-  stripeInvoiceId   String        @unique
-  amount            Float
-  status            InvoiceStatus @default(PENDING)
-  dueDate           DateTime
-  paidAt            DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id              Int           @id @default(autoincrement())
+  subscriptionId  Int
+  stripeInvoiceId String        @unique
+  amount          Float
+  status          InvoiceStatus @default(PENDING)
+  dueDate         DateTime
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  subscription    Subscription  @relation(fields: [subscriptionId], references: [id])
 
-  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
-  
   @@map("invoices")
 }
 
@@ -300,10 +268,58 @@ model SupportTicket {
   priority  Priority            @default(NORMAL)
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
+  user      User                @relation(fields: [userId], references: [id])
 
   @@map("support_tickets")
+}
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model Payout {
+  id               Int           @id @default(autoincrement())
+  partnerId        Int
+  verificationId   Int?          @unique
+  amount           Float
+  currency         String        @default("GBP")
+  status           PayoutStatus  @default(PENDING)
+  stripeTransferId String?       @unique
+  stripePayoutId   String?
+  failureReason    String?
+  description      String?
+  metadata         Json?
+  scheduledFor     DateTime?
+  processedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  partner          Partner       @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  verification     Verification? @relation(fields: [verificationId], references: [id])
+
+  @@index([partnerId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payouts")
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum VerificationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+  CANCELLED
 }
 
 enum UserStatus {
@@ -326,10 +342,10 @@ enum SubscriptionStatus {
 }
 
 enum PartnerStatus {
-  PENDING
   ACTIVE
-  REJECTED
   INACTIVE
+  PENDING
+  REJECTED
 }
 
 enum InvoiceStatus {
@@ -343,15 +359,6 @@ enum SupportTicketStatus {
   IN_PROGRESS
   RESOLVED
   CLOSED
-}
-
-model SystemSetting {
-  key         String   @id
-  value       String
-  description String?
-  updatedAt   DateTime @updatedAt
-
-  @@map("system_settings")
 }
 
 enum Priority {
@@ -377,36 +384,10 @@ enum PlanTier {
   PREMIUM
 }
 
-model Payout {
-  id                Int           @id @default(autoincrement())
-  partnerId         Int
-  verificationId    Int?          @unique // Link to the verification that triggered this payout
-  amount            Float         // Amount in pounds (e.g., 2.00)
-  currency          String        @default("GBP")
-  status            PayoutStatus  @default(PENDING)
-  stripeTransferId  String?       @unique // Stripe Transfer ID
-  stripePayoutId    String?       // Stripe Payout ID (when funds reach bank)
-  failureReason     String?       // If payout failed
-  description       String?
-  metadata          Json?         // Additional metadata
-  scheduledFor      DateTime?     // When payout should be processed
-  processedAt       DateTime?     // When payout was actually processed
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  partner       Partner       @relation(fields: [partnerId], references: [id], onDelete: Cascade)
-  verification  Verification? @relation(fields: [verificationId], references: [id])
-
-  @@index([partnerId])
-  @@index([status])
-  @@index([createdAt])
-  @@map("payouts")
-}
-
 enum PayoutStatus {
-  PENDING     // Payout created, waiting to be processed
-  PROCESSING  // Being processed by Stripe
-  PAID        // Successfully paid out
-  FAILED      // Failed to process
-  CANCELLED   // Cancelled before processing
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
 }
